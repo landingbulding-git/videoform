@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle, ChevronLeft, Loader2, Volume2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -13,6 +13,9 @@ type Step = {
 };
 
 function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
+  const [searchParams] = useSearchParams();
+  const [hiddenFields, setHiddenFields] = useState<Record<string, string>>({});
+  
   const [currentStepId, setCurrentStepId] = useState<string>(flowData[0].id);
   const [stepHistory, setStepHistory] = useState<string[]>([]);
   const [textInputValue, setTextInputValue] = useState('');
@@ -24,6 +27,20 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [isPlaying, setIsPlaying] = useState(true);
   const [isEnded, setIsEnded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Initialize hidden fields from URL parameters on mount
+  useEffect(() => {
+    const fields: Record<string, string> = {};
+    const name = searchParams.get('name');
+    const company = searchParams.get('company');
+    const link = searchParams.get('link');
+
+    if (name) fields.name = name;
+    if (company) fields.company = company;
+    if (link) fields.link = link;
+
+    setHiddenFields(fields);
+  }, [searchParams]);
 
   // Reset state whenever the slug changes
   useEffect(() => {
@@ -95,6 +112,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           access_key: accessKey,
           subject: `New VideoAsk Internal Submission: ${slug}`,
           Flow: slug, // Include the slug in the form data
+          ...hiddenFields,
           ...answers,
           ...finalAnswerData
         })
