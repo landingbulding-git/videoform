@@ -75,6 +75,14 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   };
 
   const handleSubmit = async () => {
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    
+    if (!accessKey) {
+      console.error("Web3Forms Access Key (VITE_WEB3FORMS_ACCESS_KEY) is missing. Check your environment variables.");
+      alert("Config error: Submission service is not properly configured.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -84,7 +92,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           Accept: 'application/json'
         },
         body: JSON.stringify({
-          access_key: import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || 'YOUR_ACCESS_KEY_HERE',
+          access_key: accessKey,
           subject: `New VideoAsk Internal Submission: ${slug}`,
           Flow: slug, // Include the slug in the form data
           ...answers
@@ -94,12 +102,13 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       if (response.ok) {
         setIsSubmitted(true);
       } else {
-        console.error("Submission failed");
-        alert("Submission failed. Please try again.");
+        const errorData = await response.json();
+        console.error("Submission failed:", errorData);
+        alert(`Submission failed: ${errorData.message || "Please try again."}`);
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("An error occurred. Please try again.");
+      alert("An error occurred during submission. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -368,12 +377,16 @@ export default function VideoFlowRoute() {
       try {
         const response = await fetch(`/flows/${slug}.json`);
         if (!response.ok) {
-          throw new Error('Flow not found');
+          if (response.status === 404) {
+            console.error(`Flow config not found for: ${slug}`);
+            throw new Error(`The flow '${slug}' could not be found (404).`);
+          }
+          throw new Error(`Failed to load flow data (Status: ${response.status})`);
         }
         const data = await response.json();
         setFlowData(data);
       } catch (err) {
-        console.error(err);
+        console.error("Fetch Error:", err);
         setError(true);
       } finally {
         setIsLoading(false);
