@@ -1,0 +1,5 @@
+{
+  "name": "VideoAsk Clone",
+  "description": "A VideoAsk clone for internal use with a JSON-based flow configuration.",
+  "requestFramePermissions": []
+}

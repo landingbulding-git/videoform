@@ -1,0 +1,39 @@
+[
+  {
+    "id": "step-1",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "question": "Welcome! What are you interested in today?",
+    "type": "multiple-choice",
+    "options": [
+      {
+        "label": "Sales Inquiry",
+        "nextStepId": "step-2"
+      },
+      {
+        "label": "Customer Support",
+        "nextStepId": "step-3"
+      }
+    ]
+  },
+  {
+    "id": "step-2",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "question": "Great! Please leave your email so our sales team can contact you.",
+    "type": "text",
+    "nextStepId": "step-4"
+  },
+  {
+    "id": "step-3",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "question": "Sorry you're having issues. Please describe your problem in detail.",
+    "type": "text",
+    "nextStepId": "step-4"
+  },
+  {
+    "id": "step-4",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "question": "Thank you! We will get back to you shortly.",
+    "type": "multiple-choice",
+    "options": []
+  }
+]
