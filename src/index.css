@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .mask-fade-y {
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 16px, black calc(100% - 16px), transparent);
+  }
+  
+  @media (min-width: 768px) {
+    .md\:mask-none {
+      -webkit-mask-image: none !important;
+      mask-image: none !important;
+    }
+  }
+}

@@ -280,16 +280,18 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
               <>
                 {/* Multiple Choice Options */}
                 {currentStep.type === 'multiple-choice' && currentStep.options && currentStep.options.length > 0 && (
-                  <div className="flex flex-col gap-3 w-full">
-                    {currentStep.options.map((option, index) => (
-                      <button
-                        key={index}
-                        onClick={() => goToNextStep(option.nextStepId, option.label)}
-                        className="w-full py-4 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm"
-                      >
-                        <span className="text-lg">{option.label}</span>
-                      </button>
-                    ))}
+                  <div className="w-full mask-fade-y md:mask-none py-2 md:py-0">
+                    <div className="flex flex-col gap-3 w-full max-h-[45dvh] md:max-h-none overflow-y-auto hide-scrollbar px-1">
+                      {currentStep.options.map((option, index) => (
+                        <button
+                          key={index}
+                          onClick={() => goToNextStep(option.nextStepId, option.label)}
+                          className="w-full py-4 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm shrink-0"
+                        >
+                          <span className="text-lg">{option.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
