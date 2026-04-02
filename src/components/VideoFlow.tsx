@@ -74,7 +74,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (finalAnswerData: Record<string, string> = {}) => {
     const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
     
     if (!accessKey) {
@@ -95,7 +95,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           access_key: accessKey,
           subject: `New VideoAsk Internal Submission: ${slug}`,
           Flow: slug, // Include the slug in the form data
-          ...answers
+          ...answers,
+          ...finalAnswerData
         })
       });
       
@@ -266,70 +267,71 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
               {currentStep.question}
             </h2>
 
-            {isLastStep ? (
-              <div className="mt-4 w-full flex flex-col items-center">
-                <button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="w-full py-4 px-6 bg-white md:bg-black text-black md:text-white rounded-2xl font-bold text-lg transition-colors hover:bg-gray-200 md:hover:bg-gray-800 shadow-lg flex items-center justify-center disabled:opacity-70"
-                >
-                  {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Beküldés'}
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Multiple Choice Options */}
-                {currentStep.type === 'multiple-choice' && currentStep.options && currentStep.options.length > 0 && (
-                  <div className="w-full mask-fade-y md:mask-none py-1 md:py-0">
-                    <div className="flex flex-col gap-2 w-full max-h-[30dvh] md:max-h-none overflow-y-auto hide-scrollbar px-1 pb-2">
-                      {currentStep.options.map((option, index) => (
-                        <button
-                          key={index}
-                          onClick={() => goToNextStep(option.nextStepId, option.label)}
-                          className="w-full py-3 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-xl md:rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm shrink-0"
-                        >
-                          <span className="text-base md:text-lg">{option.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Text Input */}
-                {currentStep.type === 'text' && (
-                  <div className="w-full flex flex-col items-center relative">
-                    <textarea 
-                      rows={1}
-                      value={textInputValue}
-                      onChange={(e) => {
-                        setTextInputValue(e.target.value);
-                        e.target.style.height = 'auto';
-                        e.target.style.height = `${e.target.scrollHeight}px`;
-                      }}
-                      className="w-full py-3 px-2 bg-transparent border-b-2 border-white/50 md:border-black/20 text-white md:text-black placeholder-white/50 md:placeholder-black/40 focus:outline-none focus:border-white md:focus:border-black text-xl text-center transition-colors resize-none overflow-y-auto max-h-[140px]"
-                      placeholder="Írj ide..."
-                      autoFocus
-                    />
-                    
-                    {/* Next Arrow Button */}
-                    <div 
-                      className={`mt-6 transition-all duration-300 ease-in-out ${
-                        textInputValue.trim().length > 0 
-                          ? 'opacity-100 translate-y-0' 
-                          : 'opacity-0 translate-y-4 pointer-events-none'
-                      }`}
-                    >
+            <>
+              {/* Multiple Choice Options */}
+              {currentStep.type === 'multiple-choice' && currentStep.options && currentStep.options.length > 0 && (
+                <div className="w-full mask-fade-y md:mask-none py-1 md:py-0">
+                  <div className="flex flex-col gap-2 w-full max-h-[30dvh] md:max-h-none overflow-y-auto hide-scrollbar px-1 pb-2">
+                    {currentStep.options.map((option, index) => (
                       <button
-                        onClick={() => goToNextStep(currentStep.nextStepId, textInputValue)}
-                        className="p-4 bg-white md:bg-black text-black md:text-white rounded-full hover:bg-gray-200 md:hover:bg-gray-800 transition-colors shadow-lg flex items-center justify-center"
+                        key={index}
+                        onClick={() => {
+                          if (!option.nextStepId || option.nextStepId === 'end') {
+                            handleSubmit({ [currentStep.id]: option.label });
+                          } else {
+                            goToNextStep(option.nextStepId, option.label);
+                          }
+                        }}
+                        className="w-full py-3 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-xl md:rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm shrink-0"
                       >
-                        <ArrowRight size={24} />
+                        <span className="text-base md:text-lg">{option.label}</span>
                       </button>
-                    </div>
+                    ))}
                   </div>
-                )}
-              </>
-            )}
+                </div>
+              )}
+
+              {/* Text Input */}
+              {currentStep.type === 'text' && (
+                <div className="w-full flex flex-col items-center relative">
+                  <textarea
+                    rows={1}
+                    value={textInputValue}
+                    onChange={(e) => {
+                      setTextInputValue(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = `${e.target.scrollHeight}px`;
+                    }}
+                    className="w-full py-3 px-2 bg-transparent border-b-2 border-white/50 md:border-black/20 text-white md:text-black placeholder-white/50 md:placeholder-black/40 focus:outline-none focus:border-white md:focus:border-black text-xl text-center transition-colors resize-none overflow-y-auto max-h-[140px]"
+                    placeholder="Írj ide..."
+                    autoFocus
+                  />
+
+                  {/* Next Arrow Button */}
+                  <div
+                    className={`mt-6 transition-all duration-300 ease-in-out ${
+                      textInputValue.trim().length > 0
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-4 pointer-events-none'
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        if (isLastStep) {
+                          handleSubmit({ [currentStep.id]: textInputValue });
+                        } else {
+                          goToNextStep(currentStep.nextStepId, textInputValue);
+                        }
+                      }}
+                      disabled={isSubmitting}
+                      className="p-4 bg-white md:bg-black text-black md:text-white rounded-full hover:bg-gray-200 md:hover:bg-gray-800 transition-colors shadow-lg flex items-center justify-center disabled:opacity-70"
+                    >
+                      {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight size={24} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           </motion.div>
         </AnimatePresence>
       </div>
