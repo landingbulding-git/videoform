@@ -252,7 +252,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       </div>
 
       {/* Right Side (Interaction Area) */}
-      <div className="absolute bottom-0 left-0 w-full p-6 sm:p-8 z-10 flex flex-col justify-end items-center md:relative md:w-1/2 md:h-full md:justify-center md:bg-white md:text-black">
+      <div className="absolute bottom-0 left-0 w-full p-4 pb-6 sm:p-8 z-10 flex flex-col justify-end items-center md:relative md:w-1/2 md:h-full md:justify-center md:bg-white md:text-black">
         <AnimatePresence mode="wait">
           <motion.div 
             key={currentStepId}
@@ -262,7 +262,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
             transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
             className="w-full max-w-md flex flex-col"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-white md:text-black drop-shadow-lg md:drop-shadow-none leading-tight text-center">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 md:mb-8 text-white md:text-black drop-shadow-lg md:drop-shadow-none leading-tight text-center">
               {currentStep.question}
             </h2>
 
@@ -280,15 +280,15 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
               <>
                 {/* Multiple Choice Options */}
                 {currentStep.type === 'multiple-choice' && currentStep.options && currentStep.options.length > 0 && (
-                  <div className="w-full mask-fade-y md:mask-none py-2 md:py-0">
-                    <div className="flex flex-col gap-3 w-full max-h-[45dvh] md:max-h-none overflow-y-auto hide-scrollbar px-1">
+                  <div className="w-full mask-fade-y md:mask-none py-1 md:py-0">
+                    <div className="flex flex-col gap-2 w-full max-h-[30dvh] md:max-h-none overflow-y-auto hide-scrollbar px-1 pb-2">
                       {currentStep.options.map((option, index) => (
                         <button
                           key={index}
                           onClick={() => goToNextStep(option.nextStepId, option.label)}
-                          className="w-full py-4 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm shrink-0"
+                          className="w-full py-3 px-6 bg-white/20 md:bg-gray-50 backdrop-blur-md md:backdrop-blur-none border border-white/30 md:border-gray-200 hover:bg-white/30 md:hover:bg-gray-100 text-white md:text-black rounded-xl md:rounded-2xl font-medium transition-all duration-200 text-center shadow-lg md:shadow-sm shrink-0"
                         >
-                          <span className="text-lg">{option.label}</span>
+                          <span className="text-base md:text-lg">{option.label}</span>
                         </button>
                       ))}
                     </div>
