@@ -81,9 +81,16 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
 
     if (currentStep.videoUrl.endsWith('.m3u8')) {
       if (Hls.isSupported()) {
-        hls = new Hls();
+        hls = new Hls({
+          enableWorker: true,
+          initialLiveManifestSize: 1,
+          maxBufferLength: 30,
+        });
         hls.loadSource(currentStep.videoUrl);
         hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(console.error);
+        });
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = currentStep.videoUrl;
       }
@@ -331,7 +338,6 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
         >
           {!isVideoLoaded && <Loader2 className="w-8 h-8 text-white/50 animate-spin absolute" />}
           <video
-            key={currentStepId}
             ref={videoRef}
             autoPlay
             muted={isGlobalMuted}
@@ -341,7 +347,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
               setIsEnded(true);
               setIsPlaying(false);
             }}
-            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
           
           {/* Play/Pause Overlay */}
