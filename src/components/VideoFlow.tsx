@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle, ChevronLeft, Loader2, Volume2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { db } from '../lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 type Step = {
   id: string;
@@ -92,6 +94,20 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   };
 
   const handleSubmit = async (finalAnswerData: Record<string, string> = {}) => {
+    const finalAnswers = { ...answers, ...finalAnswerData };
+    
+    // Save final state to Firestore
+    if (sessionId) {
+      const sessionRef = doc(db, 'sessions', sessionId);
+      await setDoc(sessionRef, {
+        flowSlug: slug,
+        hiddenFields,
+        answers: finalAnswers,
+        isSubmitted: true,
+        submittedAt: new Date().toISOString()
+      }, { merge: true }).catch(console.error);
+    }
+
     const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
     
     if (!accessKey) {
@@ -113,13 +129,20 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           subject: `New VideoAsk Internal Submission: ${slug}`,
           Flow: slug, // Include the slug in the form data
           ...hiddenFields,
-          ...answers,
-          ...finalAnswerData
+          ...finalAnswers
         })
       });
       
       if (response.ok) {
         setIsSubmitted(true);
+        if (sessionId) {
+          const finalAnswers = { ...answers, ...finalAnswerData };
+          updateDoc(doc(db, 'sessions', sessionId), {
+            status: 'completed',
+            completedAt: serverTimestamp(),
+            answers: finalAnswers
+          }).catch(err => console.error("Error completing session:", err));
+        }
       } else {
         const errorData = await response.json();
         console.error("Submission failed:", errorData);
@@ -437,6 +460,9 @@ export default function VideoFlowRoute() {
   }
 
   // Use key={slug} to ensure the component completely unmounts and remounts when slug changes,
+  // guaranteeing a clean state reset.
+  return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
+}
   // guaranteeing a clean state reset.
   return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
 }
