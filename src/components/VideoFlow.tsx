@@ -98,6 +98,37 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     };
   }, [currentStep?.videoUrl, currentStepId]);
 
+  // Preload potential next videos
+  useEffect(() => {
+    if (!currentStep || currentStep.type !== 'multiple-choice' || !currentStep.options) return;
+
+    const preloadInstances: Hls[] = [];
+
+    const nextStepIds = Array.from(new Set(
+      currentStep.options
+        .map(opt => opt.nextStepId)
+        .filter(id => id && id !== 'end')
+    ));
+
+    nextStepIds.forEach(id => {
+      const nextStep = flowData.find(step => step.id === id);
+      if (nextStep?.videoUrl?.endsWith('.m3u8')) {
+        if (Hls.isSupported()) {
+          const hls = new Hls({
+            autoStartLoad: true,
+            startPosition: 0,
+          });
+          hls.loadSource(nextStep.videoUrl);
+          preloadInstances.push(hls);
+        }
+      }
+    });
+
+    return () => {
+      preloadInstances.forEach(hls => hls.destroy());
+    };
+  }, [currentStep, flowData]);
+
   const isLastStep = currentStep?.type === 'multiple-choice' 
     ? (!currentStep.options || currentStep.options.length === 0)
     : (!currentStep?.nextStepId || currentStep.nextStepId === 'end');
