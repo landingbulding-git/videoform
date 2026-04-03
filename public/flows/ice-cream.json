@@ -1,7 +1,7 @@
 [
   {
     "id": "ice-cream-intro",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/1.MOV",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/designter/videoask/output/1.m3u8",
     "question": "Szeretném tudni, hogy szereted-e a fagyit?",
     "type": "multiple-choice",
     "options": [
@@ -17,7 +17,7 @@
   },
   {
     "id": "favorite-flavor",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/igen.MOV",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/designter/videoask/output/igen.m3u8",
     "question": "Melyik a kedvenc ízed?",
     "type": "multiple-choice",
     "options": [
@@ -37,7 +37,7 @@
   },
   {
     "id": "alternative-sweets",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/nem.MOV",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/designter/videoask/output/nem.m3u8",
     "question": "Ha nem a fagyit, akkor mit szeretsz?",
     "type": "text",
     "nextStepId": null
