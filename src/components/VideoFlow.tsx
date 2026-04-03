@@ -74,8 +74,9 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     ? (!currentStep.options || currentStep.options.length === 0)
     : (!currentStep?.nextStepId || currentStep.nextStepId === 'end');
 
-  const saveToFirestore = async (currentAnswers: Record<string, string>, isFinal = false) => {
+  const saveToFirestore = async (currentAnswers: Record<string, string>) => {
     if (!sessionId) return;
+    setIsSaving(true);
     try {
       const docRef = doc(db, 'sessions', sessionId);
       await setDoc(docRef, {
@@ -83,10 +84,12 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
         hiddenFields,
         answers: currentAnswers,
         updatedAt: serverTimestamp(),
-        isCompleted: isFinal
+        status: 'in-progress'
       }, { merge: true });
     } catch (error) {
       console.error("Error saving to Firestore:", error);
+    } finally {
+      setTimeout(() => setIsSaving(false), 800);
     }
   };
 
@@ -95,7 +98,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     if (answer) {
       newAnswers = { ...answers, [currentStep.id]: answer };
       setAnswers(newAnswers);
-      saveToFirestore(newAnswers, false);
+      saveToFirestore(newAnswers);
     }
     if (nextId && nextId !== 'end') {
       setStepHistory(prev => [...prev, currentStepId]);
@@ -125,8 +128,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     
     setIsSubmitting(true);
     try {
-      // Save to Firestore first
-      await saveToFirestore(finalAnswers, true);
+      // Save to Firestore first (as in-progress)
+      await saveToFirestore(finalAnswers, false);
 
       // Continue with Web3Forms submission
       const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
@@ -154,6 +157,18 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       
       if (response.ok) {
         setIsSubmitted(true);
+        if (sessionId) {
+          try {
+            const sessionRef = doc(db, 'sessions', sessionId);
+            await setDoc(sessionRef, {
+              status: 'completed',
+              submittedAt: serverTimestamp(),
+              answers: finalAnswers
+            }, { merge: true });
+          } catch (firestoreError) {
+            console.error("Error saving final state to Firestore:", firestoreError);
+          }
+        }
       } else {
         const errorData = await response.json();
         console.error("Submission failed:", errorData);
