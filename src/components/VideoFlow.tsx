@@ -78,6 +78,20 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     if (!video || !currentStep?.videoUrl) return;
 
     let hls: Hls | null = null;
+    let bufferTimeout: NodeJS.Timeout | null = null;
+
+    const handleWaiting = () => {
+      bufferTimeout = setTimeout(() => {
+        if (hls && hls.currentLevel > 0) {
+          console.warn('Buffering > 2s, forcing quality downgrade');
+          hls.nextLoadLevel = Math.max(0, hls.currentLevel - 1);
+        }
+      }, 2000);
+    };
+
+    const handlePlaying = () => {
+      if (bufferTimeout) clearTimeout(bufferTimeout);
+    };
 
     if (currentStep.videoUrl.endsWith('.m3u8')) {
       if (Hls.isSupported()) {
@@ -85,12 +99,29 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           enableWorker: true,
           initialLiveManifestSize: 1,
           maxBufferLength: 30,
+          startLevel: -1, // Auto
+          abrEwmaDefaultEstimate: 100000, // Force lowest quality initially for instant first frame
         });
         hls.loadSource(currentStep.videoUrl);
         hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        
+        hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+          // Cap max resolution at 1080p
+          let maxAllowedLevel = -1;
+          data.levels.forEach((level, index) => {
+            if (level.height <= 1080) {
+              maxAllowedLevel = index;
+            }
+          });
+          if (maxAllowedLevel !== -1) {
+            hls!.autoLevelCapping = maxAllowedLevel;
+          }
           video.play().catch(console.error);
         });
+
+        video.addEventListener('waiting', handleWaiting);
+        video.addEventListener('playing', handlePlaying);
+
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
         video.src = currentStep.videoUrl;
       }
@@ -99,6 +130,9 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     }
 
     return () => {
+      if (bufferTimeout) clearTimeout(bufferTimeout);
+      video.removeEventListener('waiting', handleWaiting);
+      video.removeEventListener('playing', handlePlaying);
       if (hls) {
         hls.destroy();
       }
