@@ -491,13 +491,3 @@ export default function VideoFlowRoute() {
   // guaranteeing a clean state reset.
   return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
 }
-00dvh] flex items-center justify-center bg-black">
-        <p className="text-white text-xl font-medium">A folyamat nem található</p>
-      </div>
-    );
-  }
-
-  // Use key={slug} to ensure the component completely unmounts and remounts when slug changes,
-  // guaranteeing a clean state reset.
-  return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
-}
