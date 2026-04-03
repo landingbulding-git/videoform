@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle, ChevronLeft, Loader2, Volume2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 type Step = {
   id: string;
@@ -18,6 +18,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [searchParams] = useSearchParams();
   const [hiddenFields, setHiddenFields] = useState<Record<string, string>>({});
   
+  const [sessionId, setSessionId] = useState<string>('');
   const [currentStepId, setCurrentStepId] = useState<string>(flowData[0].id);
   const [stepHistory, setStepHistory] = useState<string[]>([]);
   const [textInputValue, setTextInputValue] = useState('');
@@ -28,7 +29,13 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [isGlobalMuted, setIsGlobalMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isEnded, setIsEnded] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Initialize session ID
+  useEffect(() => {
+    setSessionId(crypto.randomUUID());
+  }, []);
 
   // Initialize hidden fields from URL parameters on mount
   useEffect(() => {
@@ -56,6 +63,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     setIsGlobalMuted(true);
     setIsPlaying(true);
     setIsEnded(false);
+    setSessionId(crypto.randomUUID());
   }, [slug, flowData]);
 
   const currentIndex = flowData.findIndex((step) => step.id === currentStepId);
@@ -66,9 +74,28 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     ? (!currentStep.options || currentStep.options.length === 0)
     : (!currentStep?.nextStepId || currentStep.nextStepId === 'end');
 
+  const saveToFirestore = async (currentAnswers: Record<string, string>, isFinal = false) => {
+    if (!sessionId) return;
+    try {
+      const docRef = doc(db, 'sessions', sessionId);
+      await setDoc(docRef, {
+        flowSlug: slug,
+        hiddenFields,
+        answers: currentAnswers,
+        updatedAt: serverTimestamp(),
+        isCompleted: isFinal
+      }, { merge: true });
+    } catch (error) {
+      console.error("Error saving to Firestore:", error);
+    }
+  };
+
   const goToNextStep = (nextId?: string, answer?: string) => {
+    let newAnswers = answers;
     if (answer) {
-      setAnswers(prev => ({ ...prev, [currentStep.id]: answer }));
+      newAnswers = { ...answers, [currentStep.id]: answer };
+      setAnswers(newAnswers);
+      saveToFirestore(newAnswers, false);
     }
     if (nextId && nextId !== 'end') {
       setStepHistory(prev => [...prev, currentStepId]);
@@ -96,28 +123,19 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const handleSubmit = async (finalAnswerData: Record<string, string> = {}) => {
     const finalAnswers = { ...answers, ...finalAnswerData };
     
-    // Save final state to Firestore
-    if (sessionId) {
-      const sessionRef = doc(db, 'sessions', sessionId);
-      await setDoc(sessionRef, {
-        flowSlug: slug,
-        hiddenFields,
-        answers: finalAnswers,
-        isSubmitted: true,
-        submittedAt: new Date().toISOString()
-      }, { merge: true }).catch(console.error);
-    }
-
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-    
-    if (!accessKey) {
-      console.error("Web3Forms Access Key (VITE_WEB3FORMS_ACCESS_KEY) is missing. Check your environment variables.");
-      alert("Config error: Submission service is not properly configured.");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
+      // Save to Firestore first
+      await saveToFirestore(finalAnswers, true);
+
+      // Continue with Web3Forms submission
+      const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+      if (!accessKey) {
+        console.error("Web3Forms Access Key (VITE_WEB3FORMS_ACCESS_KEY) is missing. Check your environment variables.");
+        alert("Config error: Submission service is not properly configured.");
+        return;
+      }
+
       const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: {
@@ -127,7 +145,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
         body: JSON.stringify({
           access_key: accessKey,
           subject: `New VideoAsk Internal Submission: ${slug}`,
-          Flow: slug, // Include the slug in the form data
+          Flow: slug,
+          sessionId, // Include session ID in email as well
           ...hiddenFields,
           ...finalAnswers
         })
@@ -135,14 +154,6 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       
       if (response.ok) {
         setIsSubmitted(true);
-        if (sessionId) {
-          const finalAnswers = { ...answers, ...finalAnswerData };
-          updateDoc(doc(db, 'sessions', sessionId), {
-            status: 'completed',
-            completedAt: serverTimestamp(),
-            answers: finalAnswers
-          }).catch(err => console.error("Error completing session:", err));
-        }
       } else {
         const errorData = await response.json();
         console.error("Submission failed:", errorData);
@@ -157,6 +168,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   };
 
   const handleStartOver = () => {
+    const newSessionId = crypto.randomUUID();
+    setSessionId(newSessionId);
     setCurrentStepId(flowData[0].id);
     setStepHistory([]);
     setTextInputValue('');
@@ -463,6 +476,13 @@ export default function VideoFlowRoute() {
   // guaranteeing a clean state reset.
   return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
 }
+00dvh] flex items-center justify-center bg-black">
+        <p className="text-white text-xl font-medium">A folyamat nem található</p>
+      </div>
+    );
+  }
+
+  // Use key={slug} to ensure the component completely unmounts and remounts when slug changes,
   // guaranteeing a clean state reset.
   return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
 }
