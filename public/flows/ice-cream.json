@@ -1,0 +1,45 @@
+[
+  {
+    "id": "ice-cream-intro",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/1.MOV",
+    "question": "Szeretném tudni, hogy szereted-e a fagyit?",
+    "type": "multiple-choice",
+    "options": [
+      {
+        "label": "Igen, szeretem",
+        "nextStepId": "favorite-flavor"
+      },
+      {
+        "label": "Nem vagyok oda érte",
+        "nextStepId": "alternative-sweets"
+      }
+    ]
+  },
+  {
+    "id": "favorite-flavor",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/igen.MOV",
+    "question": "Melyik a kedvenc ízed?",
+    "type": "multiple-choice",
+    "options": [
+      {
+        "label": "csoki",
+        "nextStepId": null
+      },
+      {
+        "label": "vanília",
+        "nextStepId": null
+      },
+      {
+        "label": "puncs",
+        "nextStepId": null
+      }
+    ]
+  },
+  {
+    "id": "alternative-sweets",
+    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/nem.MOV",
+    "question": "Ha nem a fagyit, akkor mit szeretsz?",
+    "type": "text",
+    "nextStepId": null
+  }
+]
