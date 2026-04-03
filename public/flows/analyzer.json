@@ -1,7 +1,7 @@
 [
   {
     "id": "monthly-visitors",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/test1.m3u8",
     "question": "Hány látogatód van átlagosan egy hónapban?",
     "type": "multiple-choice",
     "options": [
@@ -16,7 +16,7 @@
   },
   {
     "id": "monthly-conversions",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/test2.m3u8",
     "question": "Hány vásárlás/lead érkezik havonta az oldalon keresztül?",
     "type": "multiple-choice",
     "options": [
@@ -30,7 +30,7 @@
   },
   {
     "id": "average-order-value",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/test3.m3u8",
     "question": "Mennyi egy átlagos vásárlás értéke (AOV / LTV)?",
     "type": "text",
     "nextStepId": "traffic-source"
