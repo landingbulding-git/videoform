@@ -42,11 +42,11 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   useEffect(() => {
     const fields: Record<string, string> = {};
     const name = searchParams.get('name');
-    const company = searchParams.get('company');
+    const email = searchParams.get('email');
     const link = searchParams.get('link');
 
     if (name) fields.name = name;
-    if (company) fields.company = company;
+    if (email) fields.email = email;
     if (link) fields.link = link;
 
     setHiddenFields(fields);
