@@ -1,7 +1,7 @@
 [
   {
     "id": "ice-cream-intro",
-    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/1.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/index0.m3u8",
     "question": "Szeretném tudni, hogy szereted-e a fagyit?",
     "type": "multiple-choice",
     "options": [
