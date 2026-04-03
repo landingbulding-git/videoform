@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle, ChevronLeft, Loader2, Volume2, Play } from 'lu
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import Hls from 'hls.js';
 
 type Step = {
   id: string;
@@ -70,6 +71,32 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const currentIndex = flowData.findIndex((step) => step.id === currentStepId);
   const currentStep = flowData[currentIndex] as Step;
   const progress = ((currentIndex + 1) / flowData.length) * 100;
+
+  // Handle HLS and MP4 video loading
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !currentStep?.videoUrl) return;
+
+    let hls: Hls | null = null;
+
+    if (currentStep.videoUrl.endsWith('.m3u8')) {
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(currentStep.videoUrl);
+        hls.attachMedia(video);
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = currentStep.videoUrl;
+      }
+    } else {
+      video.src = currentStep.videoUrl;
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [currentStep?.videoUrl, currentStepId]);
 
   const isLastStep = currentStep?.type === 'multiple-choice' 
     ? (!currentStep.options || currentStep.options.length === 0)
@@ -275,7 +302,6 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           <video
             key={currentStepId}
             ref={videoRef}
-            src={currentStep.videoUrl}
             autoPlay
             muted={isGlobalMuted}
             playsInline
