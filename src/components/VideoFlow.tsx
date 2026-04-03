@@ -31,6 +31,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [isEnded, setIsEnded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize session ID
   useEffect(() => {
@@ -98,7 +99,13 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     if (answer) {
       newAnswers = { ...answers, [currentStep.id]: answer };
       setAnswers(newAnswers);
-      saveToFirestore(newAnswers);
+      
+      // Debounce saving to Firestore
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      setIsSaving(true);
+      saveTimeoutRef.current = setTimeout(() => {
+        saveToFirestore(newAnswers);
+      }, 500);
     }
     if (nextId && nextId !== 'end') {
       setStepHistory(prev => [...prev, currentStepId]);
@@ -126,10 +133,13 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const handleSubmit = async (finalAnswerData: Record<string, string> = {}) => {
     const finalAnswers = { ...answers, ...finalAnswerData };
     
+    // Clear any pending debounced saves
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
     setIsSubmitting(true);
     try {
       // Save to Firestore first (as in-progress)
-      await saveToFirestore(finalAnswers, false);
+      await saveToFirestore(finalAnswers);
 
       // Continue with Web3Forms submission
       const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
@@ -392,8 +402,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
                           goToNextStep(currentStep.nextStepId, textInputValue);
                         }
                       }}
-                      disabled={isSubmitting}
-                      className="p-4 bg-white md:bg-black text-black md:text-white rounded-full hover:bg-gray-200 md:hover:bg-gray-800 transition-colors shadow-lg flex items-center justify-center disabled:opacity-70"
+                      disabled={isSubmitting || isSaving}
+                      className="p-4 bg-white md:bg-black text-black md:text-white rounded-full hover:bg-gray-200 md:hover:bg-gray-800 transition-colors shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ArrowRight size={24} />}
                     </button>
@@ -490,4 +500,6 @@ export default function VideoFlowRoute() {
   // Use key={slug} to ensure the component completely unmounts and remounts when slug changes,
   // guaranteeing a clean state reset.
   return <VideoFlow key={slug} flowData={flowData} slug={slug!} />;
+}
+eoFlow key={slug} flowData={flowData} slug={slug!} />;
 }
