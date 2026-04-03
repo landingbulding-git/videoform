@@ -105,7 +105,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     };
   }, [currentStep?.videoUrl, currentStepId]);
 
-  // Preload potential next videos
+  // Smart Preloader: Headless HLS instances for upcoming videos
   useEffect(() => {
     if (!currentStep || currentStep.type !== 'multiple-choice' || !currentStep.options) return;
 
@@ -124,6 +124,8 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           const hls = new Hls({
             autoStartLoad: true,
             startPosition: 0,
+            enableWorker: true, // Use web worker for faster background parsing
+            maxBufferLength: 10, // Only buffer a few segments
           });
           hls.loadSource(nextStep.videoUrl);
           preloadInstances.push(hls);
