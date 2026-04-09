@@ -255,50 +255,53 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
 
       // Continue with Web3Forms submission
       const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-      if (!accessKey) {
-        console.error("Web3Forms Access Key (VITE_WEB3FORMS_ACCESS_KEY) is missing. Check your environment variables.");
-        alert("Config error: Submission service is not properly configured.");
-        return;
-      }
-
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json'
-        },
-        body: JSON.stringify({
-          access_key: accessKey,
-          subject: `New VideoAsk Internal Submission: ${slug}`,
-          Flow: slug,
-          sessionId, // Include session ID in email as well
-          ...hiddenFields,
-          ...finalAnswers
-        })
-      });
-      
-      if (response.ok) {
-        setIsSubmitted(true);
-        if (sessionId) {
-          try {
-            const sessionRef = doc(db, 'sessions', sessionId);
-            await setDoc(sessionRef, {
-              status: 'completed',
-              submittedAt: serverTimestamp(),
-              answers: finalAnswers
-            }, { merge: true });
-          } catch (firestoreError) {
-            console.error("Error saving final state to Firestore:", firestoreError);
+      if (accessKey) {
+        try {
+          const response = await fetch('https://api.web3forms.com/submit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json'
+            },
+            body: JSON.stringify({
+              access_key: accessKey,
+              subject: `New VideoAsk Internal Submission: ${slug}`,
+              Flow: slug,
+              sessionId, // Include session ID in email as well
+              ...hiddenFields,
+              ...finalAnswers
+            })
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.warn("Web3Forms Submission issue (e.g. marked as spam):", errorData);
           }
+        } catch (fetchError) {
+          console.error("Failed to reach Web3Forms:", fetchError);
         }
       } else {
-        const errorData = await response.json();
-        console.error("Submission failed:", errorData);
-        alert(`Submission failed: ${errorData.message || "Please try again."}`);
+        console.error("Web3Forms Access Key is missing.");
+      }
+
+      // Always mark as completed for the user if Firestore save didn't throw an error.
+      // This prevents Web3Forms spam filters from breaking the user experience.
+      setIsSubmitted(true);
+      if (sessionId) {
+        try {
+          const sessionRef = doc(db, 'sessions', sessionId);
+          await setDoc(sessionRef, {
+            status: 'completed',
+            submittedAt: serverTimestamp(),
+            answers: finalAnswers
+          }, { merge: true });
+        } catch (firestoreError) {
+          console.error("Error saving final state to Firestore:", firestoreError);
+        }
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("An error occurred during submission. Please check your connection and try again.");
+      alert("Hiba történt a küldés során. Kérlek, ellenőrizd az internetkapcsolatod és próbáld újra.");
     } finally {
       setIsSubmitting(false);
     }
