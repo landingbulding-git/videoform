@@ -15,6 +15,17 @@ type Step = {
   nextStepId?: string;
 };
 
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [searchParams] = useSearchParams();
   const [hiddenFields, setHiddenFields] = useState<Record<string, string>>({});
@@ -36,7 +47,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
 
   // Initialize session ID
   useEffect(() => {
-    setSessionId(crypto.randomUUID());
+    setSessionId(generateUUID());
   }, []);
 
   // Initialize hidden fields from URL parameters on mount
@@ -65,7 +76,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     setIsGlobalMuted(true);
     setIsPlaying(true);
     setIsEnded(false);
-    setSessionId(crypto.randomUUID());
+    setSessionId(generateUUID());
   }, [slug, flowData]);
 
   const currentIndex = flowData.findIndex((step) => step.id === currentStepId);
@@ -294,7 +305,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   };
 
   const handleStartOver = () => {
-    const newSessionId = crypto.randomUUID();
+    const newSessionId = generateUUID();
     setSessionId(newSessionId);
     setCurrentStepId(flowData[0].id);
     setStepHistory([]);
