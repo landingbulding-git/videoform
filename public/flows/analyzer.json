@@ -76,7 +76,7 @@
       { "label": "50.000 - 150.000 Ft", "nextStepId": "nda-request" },
       { "label": "150.000 - 250.000 Ft", "nextStepId": "nda-request" },
       { "label": "250.000 - 500.000 Ft", "nextStepId": "nda-request" },
-      { "label": "50.000 - 1.000.000 Ft", "nextStepId": "nda-request" },
+      { "label": "500.000 - 1.000.000 Ft", "nextStepId": "nda-request" },
       { "label": "1.000.000 - 2.000.000 Ft", "nextStepId": "nda-request" },
       { "label": "2.000.000 Ft +", "nextStepId": "nda-request" }
     ]
