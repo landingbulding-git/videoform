@@ -397,7 +397,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
               setIsEnded(true);
               setIsPlaying(false);
             }}
-            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            className={`w-full h-full object-cover md:aspect-[9/16] transition-opacity duration-300 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
           />
           
           {/* Play/Pause Overlay */}
