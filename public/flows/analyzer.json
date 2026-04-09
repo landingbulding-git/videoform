@@ -1,7 +1,7 @@
 [
   {
     "id": "introduction",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit1.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit1.m3u8",
     "question": "Kérem, tekintse meg a videót és válaszoljon a kérdésekre. Mindössze 2 perc az egész.",
     "type": "multiple-choice",
     "options": [
@@ -13,7 +13,7 @@
   },
   {
     "id": "monthly-visitors",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit2.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit2.m3u8",
     "question": "Hány látogatója van van a weboldalon átlagosan egy hónapban?",
     "type": "multiple-choice",
     "options": [
@@ -28,7 +28,7 @@
   },
   {
     "id": "online-patients",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit3.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit3.m3u8",
     "question": "Hány valódi pácienst szerez a klinika havonta online?",
     "type": "multiple-choice",
     "options": [
@@ -42,7 +42,7 @@
   },
   {
     "id": "traffic-source",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit4.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit4.m3u8",
     "question": "Mi a klinika legfőbb forgalmi forrása?",
     "type": "multiple-choice",
     "options": [
@@ -54,7 +54,7 @@
   },
   {
     "id": "monthly-ad-spend",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit5.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit5.m3u8",
     "question": "Mennyit költ havonta fizetett hirdetésre?",
     "type": "multiple-choice",
     "options": [
@@ -68,7 +68,7 @@
   },
   {
     "id": "patient-ltv",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit6.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit6.m3u8",
     "question": "Mennyit költ Önöknél egy átlagos páciens a teljes együttműködésük alatt?",
     "type": "multiple-choice",
     "options": [
@@ -83,7 +83,7 @@
   },
   {
     "id": "nda-request",
-    "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/audit7.m3u8",
+    "videoUrl": "https://d2agsjtm4am7y.cloudfront.net/audit7.m3u8",
     "question": "Szeretné kérni az általános titoktartási nyilatkozatot e-mailben?",
     "type": "multiple-choice",
     "options": [
