@@ -368,7 +368,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       </div>
 
       {/* Left Side (Video Area) */}
-      <div className="relative w-full h-full md:w-1/2 md:h-full bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+      <div className="relative w-full h-full md:w-1/2 md:h-full bg-black flex items-center justify-center overflow-hidden">
         
         {/* Back Button */}
         {stepHistory.length > 0 && !isSubmitted && (
@@ -381,9 +381,9 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
           </button>
         )}
 
-        {/* Background Video Container - Fixed Aspect Ratio on Desktop */}
+        {/* Background Video Container */}
         <div 
-          className="relative w-full h-full md:h-[94%] md:aspect-[9/16] bg-black flex items-center justify-center overflow-hidden cursor-pointer md:rounded-[2.5rem] md:shadow-[0_0_50px_rgba(0,0,0,0.5)] md:border-[8px] md:border-[#1a1a1a]"
+          className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden cursor-pointer"
           onClick={handleVideoClick}
         >
           {!isVideoLoaded && <Loader2 className="w-8 h-8 text-white/50 animate-spin absolute" />}
@@ -445,7 +445,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
       </div>
 
       {/* Right Side (Interaction Area) */}
-      <div className="absolute bottom-0 left-0 w-full p-4 pb-6 sm:p-8 z-10 flex flex-col justify-end items-center md:relative md:w-1/2 md:h-full md:justify-center md:bg-white md:text-black">
+      <div className="absolute bottom-0 left-0 w-full p-4 pb-6 sm:p-8 z-10 flex flex-col justify-end items-center md:relative md:w-1/2 md:h-full md:justify-center md:bg-white md:text-black md:overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div 
             key={currentStepId}
