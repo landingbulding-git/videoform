@@ -85,45 +85,77 @@ const YouTubeStepPlayer = forwardRef<YouTubePlayerHandle, YouTubeStepPlayerProps
 
     // Initialize YouTube player
     useEffect(() => {
+      let isMounted = true;
+
       const initPlayer = async () => {
         console.log('[YouTubeStepPlayer] Loading YouTube API for videoId:', videoId);
         const YT = await loadYouTubeIframeApi();
         console.log('[YouTubeStepPlayer] YouTube API loaded, YT:', YT);
+
+        if (!isMounted) {
+          console.warn('[YouTubeStepPlayer] Component unmounted, skipping player init');
+          return;
+        }
 
         if (!containerRef.current) {
           console.warn('[YouTubeStepPlayer] Container ref not found');
           return;
         }
 
+        // Clear any existing player before creating a new one
+        if (playerRef.current?.destroy) {
+          try {
+            playerRef.current.destroy();
+          } catch (e) {
+            console.warn('[YouTubeStepPlayer] Error destroying previous player:', e);
+          }
+          playerRef.current = null;
+        }
+
+        // Clear container of any previous iframes
+        if (containerRef.current.children.length > 0) {
+          Array.from(containerRef.current.children).forEach((child) => child.remove());
+        }
+
         const rect = containerRef.current.getBoundingClientRect();
         const style = computeCoverStyle(rect.width, rect.height);
 
         console.log('[YouTubeStepPlayer] Creating YT.Player with videoId:', videoId, 'size:', style.width, style.height);
-        playerRef.current = new YT.Player(containerRef.current, {
-          videoId,
-          width: Math.floor(style.width.replace('px', '') as any),
-          height: Math.floor(style.height.replace('px', '') as any),
-          playerVars: {
-            autoplay: 1,
-            controls: 0,
-            disablekb: 1,
-            playsinline: 1,
-            rel: 0,
-            modestbranding: 1,
-            mute: muted ? 1 : 0,
-            iv_load_policy: 3,
-          },
-          events: {
-            onStateChange: handleStateChange,
-          },
-        });
+
+        try {
+          playerRef.current = new YT.Player(containerRef.current, {
+            videoId,
+            width: Math.floor(style.width.replace('px', '') as any),
+            height: Math.floor(style.height.replace('px', '') as any),
+            playerVars: {
+              autoplay: 1,
+              controls: 0,
+              disablekb: 1,
+              playsinline: 1,
+              rel: 0,
+              modestbranding: 1,
+              mute: muted ? 1 : 0,
+              iv_load_policy: 3,
+            },
+            events: {
+              onStateChange: handleStateChange,
+            },
+          });
+        } catch (err) {
+          console.error('[YouTubeStepPlayer] Failed to create player:', err);
+        }
       };
 
       initPlayer();
 
       return () => {
+        isMounted = false;
         if (playerRef.current?.destroy) {
-          playerRef.current.destroy();
+          try {
+            playerRef.current.destroy();
+          } catch (e) {
+            console.warn('[YouTubeStepPlayer] Error destroying player on cleanup:', e);
+          }
           playerRef.current = null;
         }
       };

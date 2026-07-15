@@ -102,13 +102,11 @@ export default function VideoAnswerRecorder({
       streamRef.current = stream;
       setPhase('previewing');
 
-      // Set srcObject after state update to ensure video element is rendered
-      setTimeout(() => {
-        if (previewVideoRef.current && streamRef.current) {
-          console.log('[VideoAnswerRecorder] Setting srcObject on video element');
-          previewVideoRef.current.srcObject = streamRef.current;
-        }
-      }, 0);
+      // Set srcObject immediately
+      if (previewVideoRef.current) {
+        console.log('[VideoAnswerRecorder] Setting srcObject immediately');
+        previewVideoRef.current.srcObject = stream;
+      }
     } catch (err) {
       const errorMsg =
         err instanceof DOMException
@@ -190,14 +188,6 @@ export default function VideoAnswerRecorder({
     setUploadProgress(0);
   };
 
-  // Sync srcObject with stream when stream changes
-  useEffect(() => {
-    if (phase === 'previewing' && previewVideoRef.current && streamRef.current) {
-      console.log('[VideoAnswerRecorder] Setting srcObject via useEffect');
-      previewVideoRef.current.srcObject = streamRef.current;
-      previewVideoRef.current.play().catch(console.warn);
-    }
-  }, [phase]);
 
   const useAnswer = async () => {
     if (!recordedBlobRef.current) return;
@@ -343,7 +333,7 @@ export default function VideoAnswerRecorder({
                 muted
                 playsInline
                 style={{ transform: 'scaleX(-1)' }}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover bg-black"
               />
             </div>
             <button
