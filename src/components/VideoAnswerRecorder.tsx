@@ -72,9 +72,21 @@ export default function VideoAnswerRecorder({
   const streamRef = useRef<MediaStream | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const previewVideoRef = useRef<HTMLVideoElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const recordedBlobRef = useRef<Blob | null>(null);
   const recordedMimeTypeRef = useRef<string>('video/webm');
+
+  // Callback ref: the preview <video> mounts *after* AnimatePresence exit
+  // animations finish, so attach the stream at mount time — a plain ref +
+  // setTimeout misses the element entirely (black screen).
+  const attachPreviewVideo = (el: HTMLVideoElement | null) => {
+    previewVideoRef.current = el;
+    if (el && streamRef.current && el.srcObject !== streamRef.current) {
+      console.log('[VideoAnswerRecorder] Attaching stream to preview element');
+      el.srcObject = streamRef.current;
+      el.play().catch(() => {});
+    }
+  };
 
   // Feature detection on mount
   useEffect(() => {
@@ -328,7 +340,7 @@ export default function VideoAnswerRecorder({
           >
             <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/30 md:border-gray-200">
               <video
-                ref={previewVideoRef}
+                ref={attachPreviewVideo}
                 autoPlay
                 muted
                 playsInline
@@ -356,7 +368,7 @@ export default function VideoAnswerRecorder({
           >
             <div className="w-full aspect-video bg-black rounded-lg overflow-hidden border border-white/30 md:border-gray-200">
               <video
-                ref={previewVideoRef}
+                ref={attachPreviewVideo}
                 autoPlay
                 muted
                 playsInline
