@@ -31,6 +31,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const key = `answers/${sessionId}/${stepId}.${ext}`;
 
   try {
+    if (!process.env.AWS_S3_BUCKET) {
+      console.error('AWS_S3_BUCKET not set');
+      return res.status(500).json({ error: 'Server misconfigured: AWS_S3_BUCKET' });
+    }
+    if (!process.env.AWS_S3_PUBLIC_BASE_URL) {
+      console.error('AWS_S3_PUBLIC_BASE_URL not set');
+      return res.status(500).json({ error: 'Server misconfigured: AWS_S3_PUBLIC_BASE_URL' });
+    }
+
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
@@ -42,7 +51,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ uploadUrl, publicUrl });
   } catch (err) {
-    console.error('Failed to create presigned URL', err);
-    return res.status(500).json({ error: 'Failed to create upload URL' });
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error('Failed to create presigned URL:', errorMsg);
+    return res.status(500).json({ error: 'Failed to create upload URL', details: errorMsg });
   }
 }

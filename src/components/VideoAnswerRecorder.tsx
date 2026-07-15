@@ -93,15 +93,22 @@ export default function VideoAnswerRecorder({
     setErrorMessage('');
 
     try {
+      console.log('[VideoAnswerRecorder] Requesting camera permission...');
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user' },
         audio: true,
       });
+      console.log('[VideoAnswerRecorder] Got stream:', stream);
       streamRef.current = stream;
-      if (previewVideoRef.current) {
-        previewVideoRef.current.srcObject = stream;
-      }
       setPhase('previewing');
+
+      // Set srcObject after state update to ensure video element is rendered
+      setTimeout(() => {
+        if (previewVideoRef.current && streamRef.current) {
+          console.log('[VideoAnswerRecorder] Setting srcObject on video element');
+          previewVideoRef.current.srcObject = streamRef.current;
+        }
+      }, 0);
     } catch (err) {
       const errorMsg =
         err instanceof DOMException
@@ -109,6 +116,7 @@ export default function VideoAnswerRecorder({
             ? 'Camera permission denied. Please allow access to your camera and try again.'
             : err.message
           : 'Failed to access camera. Please check your device settings.';
+      console.error('[VideoAnswerRecorder] Permission error:', err);
       setErrorMessage(errorMsg);
       setPhase('error');
     }
@@ -170,6 +178,10 @@ export default function VideoAnswerRecorder({
     // Stop and release current stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (previewVideoRef.current) {
+      previewVideoRef.current.srcObject = null;
     }
     recordedBlobRef.current = null;
     chunksRef.current = [];
@@ -177,6 +189,15 @@ export default function VideoAnswerRecorder({
     setErrorMessage('');
     setUploadProgress(0);
   };
+
+  // Sync srcObject with stream when stream changes
+  useEffect(() => {
+    if (phase === 'previewing' && previewVideoRef.current && streamRef.current) {
+      console.log('[VideoAnswerRecorder] Setting srcObject via useEffect');
+      previewVideoRef.current.srcObject = streamRef.current;
+      previewVideoRef.current.play().catch(console.warn);
+    }
+  }, [phase]);
 
   const useAnswer = async () => {
     if (!recordedBlobRef.current) return;
