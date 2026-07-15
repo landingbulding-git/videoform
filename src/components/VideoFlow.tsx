@@ -1,16 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, CheckCircle, ChevronLeft, Loader2, Volume2, Play } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import Hls from 'hls.js';
+import { parseVideoSource } from '../lib/video';
+import YouTubeStepPlayer, { type YouTubePlayerHandle } from './YouTubeStepPlayer';
+import VideoAnswerRecorder from './VideoAnswerRecorder';
 
 type Step = {
   id: string;
   videoUrl: string;
   question: string;
-  type: 'multiple-choice' | 'text';
+  type: 'multiple-choice' | 'text' | 'video';
   options?: { label: string; nextStepId: string }[];
   nextStepId?: string;
 };
@@ -43,6 +46,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const [isEnded, setIsEnded] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const ytPlayerRef = useRef<YouTubePlayerHandle>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize session ID
@@ -82,11 +86,19 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
   const currentIndex = flowData.findIndex((step) => step.id === currentStepId);
   const currentStep = flowData[currentIndex] as Step;
   const progress = ((currentIndex + 1) / flowData.length) * 100;
+  const videoSource = useMemo(
+    () => {
+      const source = parseVideoSource(currentStep?.videoUrl ?? '');
+      console.log('[VideoFlow] Parsed videoUrl:', currentStep?.videoUrl, '→', source);
+      return source;
+    },
+    [currentStep?.videoUrl]
+  );
 
-  // Handle HLS and MP4 video loading
+  // Handle HLS and MP4 video loading (skip for YouTube)
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !currentStep?.videoUrl) return;
+    if (!video || !currentStep?.videoUrl || videoSource.type !== 'file') return;
 
     let hls: Hls | null = null;
     let bufferTimeout: NodeJS.Timeout | null = null;
@@ -150,7 +162,7 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     };
   }, [currentStep?.videoUrl, currentStepId]);
 
-  // Smart Preloader: Headless HLS instances for upcoming videos
+  // Smart Preloader: Headless HLS instances for upcoming videos (YouTube sources are skipped naturally)
   useEffect(() => {
     if (!currentStep || currentStep.type !== 'multiple-choice' || !currentStep.options) return;
 
@@ -326,24 +338,42 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
     if (isGlobalMuted) {
       setIsGlobalMuted(false);
       setIsEnded(false);
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.play().catch(console.error);
-        setIsPlaying(true);
-      }
-    } else {
-      if (videoRef.current) {
-        if (isEnded) {
+      if (videoSource.type === 'youtube') {
+        ytPlayerRef.current?.restartWithSound();
+      } else {
+        if (videoRef.current) {
           videoRef.current.currentTime = 0;
           videoRef.current.play().catch(console.error);
+        }
+      }
+      setIsPlaying(true);
+    } else {
+      if (videoSource.type === 'youtube') {
+        if (isEnded) {
+          ytPlayerRef.current?.restartWithSound();
           setIsPlaying(true);
           setIsEnded(false);
         } else if (isPlaying) {
-          videoRef.current.pause();
+          ytPlayerRef.current?.pause();
           setIsPlaying(false);
         } else {
-          videoRef.current.play().catch(console.error);
+          ytPlayerRef.current?.play();
           setIsPlaying(true);
+        }
+      } else {
+        if (videoRef.current) {
+          if (isEnded) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(console.error);
+            setIsPlaying(true);
+            setIsEnded(false);
+          } else if (isPlaying) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          } else {
+            videoRef.current.play().catch(console.error);
+            setIsPlaying(true);
+          }
         }
       }
     }
@@ -382,23 +412,38 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
         )}
 
         {/* Background Video Container */}
-        <div 
+        <div
           className="absolute inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden cursor-pointer"
           onClick={handleVideoClick}
         >
           {!isVideoLoaded && <Loader2 className="w-8 h-8 text-white/50 animate-spin absolute" />}
-          <video
-            ref={videoRef}
-            autoPlay
-            muted={isGlobalMuted}
-            playsInline
-            onLoadedData={() => setIsVideoLoaded(true)}
-            onEnded={() => {
-              setIsEnded(true);
-              setIsPlaying(false);
-            }}
-            className={`w-full h-full object-cover md:aspect-[9/16] transition-opacity duration-300 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
-          />
+          {videoSource.type === 'youtube' ? (
+            <YouTubeStepPlayer
+              ref={ytPlayerRef}
+              videoId={videoSource.videoId}
+              muted={isGlobalMuted}
+              onLoaded={() => setIsVideoLoaded(true)}
+              onEnded={() => {
+                setIsEnded(true);
+                setIsPlaying(false);
+              }}
+              onPlayStateChange={setIsPlaying}
+              playbackKey={currentStepId}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              muted={isGlobalMuted}
+              playsInline
+              onLoadedData={() => setIsVideoLoaded(true)}
+              onEnded={() => {
+                setIsEnded(true);
+                setIsPlaying(false);
+              }}
+              className={`w-full h-full object-cover md:aspect-[9/16] transition-opacity duration-300 ${isVideoLoaded ? 'opacity-100' : 'opacity-0'}`}
+            />
+          )}
           
           {/* Play/Pause Overlay */}
           <AnimatePresence>
@@ -460,6 +505,22 @@ function VideoFlow({ flowData, slug }: { flowData: Step[]; slug: string }) {
             </h2>
 
             <>
+              {/* Video Answer Recording */}
+              {currentStep.type === 'video' && (
+                <VideoAnswerRecorder
+                  key={currentStepId}
+                  sessionId={sessionId}
+                  stepId={currentStep.id}
+                  onUploaded={(publicUrl) => {
+                    if (isLastStep) {
+                      handleSubmit({ [currentStep.id]: publicUrl });
+                    } else {
+                      goToNextStep(currentStep.nextStepId, publicUrl);
+                    }
+                  }}
+                />
+              )}
+
               {/* Multiple Choice Options */}
               {currentStep.type === 'multiple-choice' && currentStep.options && currentStep.options.length > 0 && (
                 <div className="w-full mask-fade-y md:mask-none py-1 md:py-0">

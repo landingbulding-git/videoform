@@ -12,6 +12,10 @@
       {
         "label": "Customer Support",
         "nextStepId": "step-3"
+      },
+      {
+        "label": "Video Demo",
+        "nextStepId": "step-youtube"
       }
     ]
   },
@@ -27,6 +31,13 @@
     "videoUrl": "https://designter.s3.eu-central-1.amazonaws.com/part+-+before+analyzation.mp4",
     "question": "Sorry you're having issues. Please describe your problem in detail.",
     "type": "text",
+    "nextStepId": "step-4"
+  },
+  {
+    "id": "step-youtube",
+    "videoUrl": "dQw4w9WgXcQ",
+    "question": "Here's a YouTube unlisted video example. Record your response!",
+    "type": "video",
     "nextStepId": "step-4"
   },
   {
