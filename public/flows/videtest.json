@@ -1,23 +1,23 @@
 [
-    {
+  {
     "id": "welcome-message",
-    "videoUrl": "[https://www.youtube.com/watch?v=kYJjWw1l6-Y](https://www.google.com/search?q=https://www.youtube.com/watch%3Fv%3DkYJjWw1l6-Y)",
+    "videoUrl": "kYJjWw1l6-Y",
     "question": "Üdvözöllek! Kérlek, mutatkozz be egy videóban.",
     "type": "video",
     "nextStepId": "experience-inquiry"
-    },
-    {
+  },
+  {
     "id": "experience-inquiry",
-    "videoUrl": "[https://www.youtube.com/watch?v=34Na4j8AVgA](https://www.youtube.com/watch?v=34Na4j8AVgA)",
+    "videoUrl": "34Na4j8AVgA",
     "question": "Milyen szakmai tapasztalattal rendelkezel?",
     "type": "video",
     "nextStepId": "motivation-inquiry"
-    },
-    {
+  },
+  {
     "id": "motivation-inquiry",
-    "videoUrl": "[https://www.youtube.com/watch?v=n78u33H99L0](https://www.google.com/search?q=https://www.youtube.com/watch%3Fv%3Dn78u33H99L0)",
+    "videoUrl": "n78u33H99L0",
     "question": "Miért szeretnél csatlakozni a csapathoz?",
     "type": "video",
     "nextStepId": null
-    }
-    ]
+  }
+]
